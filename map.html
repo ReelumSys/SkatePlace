@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_5083e3939bb91b9a3cfb62f68c374113 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_5083e3939bb91b9a3cfb62f68c374113" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_5083e3939bb91b9a3cfb62f68c374113 = L.map(
+                "map_5083e3939bb91b9a3cfb62f68c374113",
+                {
+                    center: [52.369, 9.931],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 12,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+            L.control.scale().addTo(map_5083e3939bb91b9a3cfb62f68c374113);
+
+            
+
+        
+    
+            var tile_layer_d6dd428567fb36a1cf34ec051bc5cadb = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_d6dd428567fb36a1cf34ec051bc5cadb.addTo(map_5083e3939bb91b9a3cfb62f68c374113);
+        
+    
+            var marker_dbdd3e56d6b2cf06714208eff65c6591 = L.marker(
+                [52.3758, 9.9331],
+                {
+}
+            ).addTo(map_5083e3939bb91b9a3cfb62f68c374113);
+        
+    
+            var icon_8a9cc8b62316b7127e4ab21b4f2c39ee = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_151d591c0586a260630157e280712f5d = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_aa91dc566d66bbaef091d1b67a364a9e = $(`<div id="html_aa91dc566d66bbaef091d1b67a364a9e" style="width: 100.0%; height: 100.0%;">Hannover Hauptbahnhof</div>`)[0];
+                popup_151d591c0586a260630157e280712f5d.setContent(html_aa91dc566d66bbaef091d1b67a364a9e);
+            
+        
+
+        marker_dbdd3e56d6b2cf06714208eff65c6591.bindPopup(popup_151d591c0586a260630157e280712f5d)
+        ;
+
+        
+    
+    
+            marker_dbdd3e56d6b2cf06714208eff65c6591.bindTooltip(
+                `<div>
+                     Hannover Hauptbahnhof
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_dbdd3e56d6b2cf06714208eff65c6591.setIcon(icon_8a9cc8b62316b7127e4ab21b4f2c39ee);
+            
+    
+            var marker_0500041e4ab97aafa194f16d86afd824 = L.marker(
+                [52.3692, 9.931],
+                {
+}
+            ).addTo(map_5083e3939bb91b9a3cfb62f68c374113);
+        
+    
+            var icon_6a73dcd687f5a1ed0ec8f24fa3d123df = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_1bfcf900a5e0c622bc971b0c65edb000 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_7d87b05d5281ac62b848f22ce67c6d8d = $(`<div id="html_7d87b05d5281ac62b848f22ce67c6d8d" style="width: 100.0%; height: 100.0%;">Neues Rathaus</div>`)[0];
+                popup_1bfcf900a5e0c622bc971b0c65edb000.setContent(html_7d87b05d5281ac62b848f22ce67c6d8d);
+            
+        
+
+        marker_0500041e4ab97aafa194f16d86afd824.bindPopup(popup_1bfcf900a5e0c622bc971b0c65edb000)
+        ;
+
+        
+    
+    
+            marker_0500041e4ab97aafa194f16d86afd824.bindTooltip(
+                `<div>
+                     Neues Rathaus
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_0500041e4ab97aafa194f16d86afd824.setIcon(icon_6a73dcd687f5a1ed0ec8f24fa3d123df);
+            
+    
+            var marker_2a916469960f19cb83dd14de97fcc6aa = L.marker(
+                [52.361, 9.935],
+                {
+}
+            ).addTo(map_5083e3939bb91b9a3cfb62f68c374113);
+        
+    
+            var icon_971987bfbba0181ad5dab5a0668b7816 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_cef38c59e772ad6089a99b22a9ef5fd3 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c3c1dd24559c43ddc8f92c62464bb021 = $(`<div id="html_c3c1dd24559c43ddc8f92c62464bb021" style="width: 100.0%; height: 100.0%;">Maschsee</div>`)[0];
+                popup_cef38c59e772ad6089a99b22a9ef5fd3.setContent(html_c3c1dd24559c43ddc8f92c62464bb021);
+            
+        
+
+        marker_2a916469960f19cb83dd14de97fcc6aa.bindPopup(popup_cef38c59e772ad6089a99b22a9ef5fd3)
+        ;
+
+        
+    
+    
+            marker_2a916469960f19cb83dd14de97fcc6aa.bindTooltip(
+                `<div>
+                     Maschsee
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_2a916469960f19cb83dd14de97fcc6aa.setIcon(icon_971987bfbba0181ad5dab5a0668b7816);
+            
+    
+            var poly_line_23c946322bc4af5e051cd7c5130bcbb4 = L.polyline(
+                [[52.3758, 9.9331], [52.372, 9.932], [52.3692, 9.931]],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "red", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 5}
+            ).addTo(map_5083e3939bb91b9a3cfb62f68c374113);
+        
+    
+            poly_line_23c946322bc4af5e051cd7c5130bcbb4.bindTooltip(
+                `<div>
+                     Straßenabschnitt: Hbf -> Rathaus
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+</script>
+</html>
