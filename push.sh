@@ -1,16 +1,11 @@
 #!/bin/bash
-# SkatePlace Auto-Push Script
-
 echo "🚀 Starting Auto-Push to GitHub..."
 
-# 1. Add all changes
+# In das Projektverzeichnis wechseln
+cd /mnt/c/Users/DreadLappy/source/repos/SkatePlace || exit 1
+
 git add .
-
-# 2. Commit with a timestamped message
-TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
-git commit -m "Auto-save: $TIMESTAMP"
-
-# 3. Push to main
+git commit -m "Auto-push: $(date '+%Y-%m-%d %H:%M:%S')"
 git push origin main
 
 echo "✅ Project successfully pushed to GitHub!"
