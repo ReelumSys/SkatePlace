@@ -53,6 +53,10 @@ center_lon = st.sidebar.number_input("Zentrum Längengrad", value=9.931)
 zoom = st.sidebar.slider("Zoom", min_value=1, max_value=20, value=12)
 
 st.sidebar.markdown("---")
+st.sidebar.subheader("🔍 Suche & Filter")
+search_query = st.sidebar.text_input("Spots suchen...", placeholder="Name oder Tag (z.B. gap)...").lower()
+
+st.sidebar.markdown("---")
 st.sidebar.subheader("🔥 Layer & Sichtbarkeit")
 show_heatmap = st.sidebar.checkbox("Heatmap anzeigen", value=False)
 show_markers = st.sidebar.checkbox("Spots anzeigen", value=True)
@@ -66,6 +70,15 @@ max_dist = st.sidebar.slider("Radius (km)", 1, 50, 10)
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("🎯 Neuer Spot")
+
+# Filter Spots based on search query
+filtered_spots = st.session_state.spots
+if search_query:
+    filtered_spots = [
+        spot for spot in st.session_state.spots 
+        if search_query in spot.get('name', '').lower() or 
+           any(search_query in tag.lower() for tag in spot.get('tags', []))
+    ]
 
 # Karte erstellen
 def create_map(lat, lon, zoom_level, spots, show_heatmap, show_markers):
@@ -88,7 +101,7 @@ def create_map(lat, lon, zoom_level, spots, show_heatmap, show_markers):
             ).add_to(m)
     return m
 
-map_obj = create_map(center_lat, center_lon, zoom, st.session_state.spots, show_heatmap, show_markers)
+map_obj = create_map(center_lat, center_lon, zoom, filtered_spots, show_heatmap, show_markers)
 output = st_folium(map_obj, width=1200, height=600)
 
 if output.get("last_clicked"):
@@ -110,6 +123,23 @@ if output.get("last_clicked"):
         
         if st.button("Spot speichern 💾"):
             if spot_name:
+                # Handling the uploaded file and saving it locally
+                photo_filename = "Kein Foto"
+                if uploaded_file:
+                    try:
+                        import uuid
+                        # Create a unique filename to avoid overwriting
+                        ext = os.path.splitext(uploaded_file.name)[1]
+                        unique_filename = f"{uuid.uuid4()}{ext}"
+                        upload_path = os.path.join("uploads", unique_filename)
+                        
+                        with open(upload_path, "wb") as f:
+                            f.write(uploaded_file.getbuffer())
+                        
+                        photo_filename = unique_filename
+                    except Exception as e:
+                        st.error(f"Fehler beim Speichern des Bildes: {e}")
+
                 new_spot = {
                     "lat": lat, 
                     "lon": lon, 
@@ -122,7 +152,7 @@ if output.get("last_clicked"):
                     "clip": spot_clip,
                     "crowd": spot_crowd,
                     "likes": 0,
-                    "photo": uploaded_file.name if uploaded_file else "Kein Foto"
+                    "photo": photo_filename
                 }
                 st.session_state.spots.append(new_spot)
                 save_data(st.session_state.spots)
@@ -134,8 +164,9 @@ if output.get("last_clicked"):
 if st.session_state.spots:
     st.write("### 📏 Nächste Spots in deiner Nähe")
     
+    # Distanzen basierend auf GEFILTERTEN Spots berechnen
     spots_with_dist = []
-    for spot in st.session_state.spots:
+    for spot in filtered_spots:
         dist = calculate_distance(user_lat, user_lon, spot['lat'], spot['lon'])
         if dist <= max_dist:
             spots_with_dist.append((dist, spot))
@@ -148,43 +179,53 @@ if st.session_state.spots:
             with nearby_cols[i % 3]:
                 st.info(f"**{spot.get('name', 'Unbenannt')}** — {dist:.2f} km entfernt")
     else:
-        st.write("Keine Spots im gewählten Radius gefunden. 🤷‍♂️")
+        st.write("Keine passenden Spots im gewählten Radius gefunden. 🤷‍♂️")
 
     st.write("---")
     st.write("### 📍 Deine Skate-Spot Liste")
-    cols = st.columns(3)
-    for i, spot in enumerate(st.session_state.spots):
-        with cols[i % 3]:
-            st.markdown(f"---")
-            st.subheader(f"🛹 {spot.get('name', 'Unbenannt')}")
-            st.write(f"**Typ:** {spot.get('type', 'Unbekannt')} | **Diff:** {spot.get('diff', 'Medium')}")
-            st.write(f"**Boden:** {spot.get('surface', 'Unbekannt')} | **Status:** {spot.get('status', 'Skatebar')}")
-            st.write(f"**Crowd:** {spot.get('crowd', 'Unbekannt')}")
-            
-            tags = spot.get('tags', [])
-            if tags:
-                st.write(f"**Tags:** {' '.join([f'`{t}`' for t in tags])}")
-            
-            if spot.get('clip'):
-                st.markdown(f"🎬 [Check Clip]({spot['clip']})")
-            
-            google_maps_url = f"https://www.google.com/maps/search/?api=1&query={spot['lat']},{spot['lon']}"
-            st.markdown(f"[📍 Open in Google Maps]({google_maps_url})")
-            
-            st.write(f"Koordinaten: `{spot['lat']:.5f}, {spot['lon']:.5f}`")
-            
-            likes = spot.get('likes', 0)
-            if st.button(f"❤️ {likes} Likes", key=f"like_{i}"):
-                spot['likes'] = likes + 1
-                save_data(st.session_state.spots)
-                st.rerun()
-            
-            if spot.get('photo') != "Kein Foto":
-                st.write(f"🖼️ Foto: {spot['photo']}")
-            
-            if st.button(f"Spot löschen", key=f"del_{i}"):
-                st.session_state.spots.pop(i)
-                save_data(st.session_state.spots)
-                st.rerun()
+    
+    if not filtered_spots:
+        st.warning("Keine Spots gefunden, die auf deine Suche passen!")
+    else:
+        cols = st.columns(3)
+        for i, spot in enumerate(filtered_spots):
+            with cols[i % 3]:
+                # Wir brauchen den originalen Index für das Löschen/Liken
+                original_index = st.session_state.spots.index(spot)
+                st.markdown(f"---")
+                st.subheader(f"🛹 {spot.get('name', 'Unbenannt')}")
+                st.write(f"**Typ:** {spot.get('type', 'Unbekannt')} | **Diff:** {spot.get('diff', 'Medium')}")
+                st.write(f"**Boden:** {spot.get('surface', 'Unbekannt')} | **Status:** {spot.get('status', 'Skatebar')}")
+                st.write(f"**Crowd:** {spot.get('crowd', 'Unbekannt')}")
+                
+                tags = spot.get('tags', [])
+                if tags:
+                    st.write(f"**Tags:** {' '.join([f'`{t}`' for t in tags])}")
+                
+                if spot.get('clip'):
+                    st.markdown(f"🎬 [Check Clip]({spot['clip']})")
+                
+                google_maps_url = f"https://www.google.com/maps/search/?api=1&query={spot['lat']},{spot['lon']}"
+                st.markdown(f"[📍 Open in Google Maps]({google_maps_url})")
+                
+                st.write(f"Koordinaten: `{spot['lat']:.5f}, {spot['lon']:.5f}`")
+                
+                likes = spot.get('likes', 0)
+                if st.button(f"❤️ {likes} Likes", key=f"like_{original_index}"):
+                    spot['likes'] = likes + 1
+                    save_data(st.session_state.spots)
+                    st.rerun()
+                
+                if spot.get('photo') != "Kein Foto":
+                    img_path = os.path.join("uploads", spot.get('photo'))
+                    if os.path.exists(img_path):
+                        st.image(img_path, caption=f"Spot-Foto", use_column_width=True)
+                    else:
+                        st.write(f"🖼️ Bild nicht gefunden: {spot.get('photo')}")
+                
+                if st.button(f"Spot löschen", key=f"del_{original_index}"):
+                    st.session_state.spots.pop(original_index)
+                    save_data(st.session_state.spots)
+                    st.rerun()
 else:
     st.info("Noch keine Spots markiert. Klicke auf die Karte, um zu starten!")
