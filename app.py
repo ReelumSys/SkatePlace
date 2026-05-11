@@ -5,61 +5,30 @@ from folium.plugins import HeatMap
 import json
 import os
 import math
-from supabase import create_client, Client
-from dotenv import load_dotenv
-
-# Lade Umgebungsvariablen aus .env
-env_path = os.path.join(os.path.dirname(__file__), ".env")
-load_dotenv(dotenv_path=env_path)
-
-# --- SUPABASE CONFIG ---
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-
-# Initialisiere Supabase Client
-@st.cache_resource
-def init_supabase():
-    if not SUPABASE_URL or not SUPABASE_KEY:
-        st.error("Supabase Keys fehlen in der .env Datei!")
-        return None
-    return create_client(SUPABASE_URL, SUPABASE_KEY)
-
-supabase: Client = init_supabase()
 
 st.set_page_config(page_title="SkatePlace GIS", layout="wide")
 
-# --- DATENBANK-LOGIK (Supabase Cloud) ---
+# --- DATENBANK-LOGIK (Local JSON File) ---
+DB_FILE = "spots_db.json"
 
 def load_data():
-    """Lädt die Spots aus Supabase."""
-    try:
-        response = supabase.table("spots").select("*").execute()
-        return response.data
-    except Exception as e:
-        st.error(f"Fehler beim Laden aus Supabase: {e}")
-        return []
+    """Lädt die Spots aus der lokalen JSON-Datei."""
+    if os.path.exists(DB_FILE):
+        try:
+            with open(DB_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            st.error(f"Fehler beim Laden der DB: {e}")
+            return []
+    return []
 
-def save_data(spot_data):
-    """Speichert einen neuen Spot in Supabase."""
+def save_data(spots):
+    """Speichert die aktuelle Spot-Liste in die lokale JSON-Datei."""
     try:
-        # In Supabase nutzen wir .insert() für neue Datensätze
-        supabase.table("spots").insert(spot_data).execute()
+        with open(DB_FILE, "w", encoding="utf-8") as f:
+            json.dump(spots, f, indent=4)
     except Exception as e:
-        st.error(f"Fehler beim Speichern in Supabase: {e}")
-
-def update_likes(spot_id, new_likes):
-    """Aktualisiert die Likes eines Spots in Supabase."""
-    try:
-        supabase.table("spots").update({"likes": new_likes}).eq("id", spot_id).execute()
-    except Exception as e:
-        st.error(f"Fehler beim Like-Update: {e}")
-
-def delete_spot(spot_id):
-    """Löscht einen Spot aus Supabase."""
-    try:
-        supabase.table("spots").delete().eq("id", spot_id).execute()
-    except Exception as e:
-        st.error(f"Fehler beim Löschen: {e}")
+        st.error(f"Fehler beim Speichern der DB: {e}")
 
 def calculate_distance(lat1, lon1, lat2, lon2):
     """Calculates the distance between two points on Earth in km (Haversine formula)."""
@@ -70,12 +39,12 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     a = math.sin(dphi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2)**2
     return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
-# Lade Daten direkt in Session State
-if 'spots' not in st.session_state or st.sidebar.button("🔄 Daten aktualisieren"):
+# Initialisiere Session State mit Daten aus der Datei
+if 'spots' not in st.session_state:
     st.session_state.spots = load_data()
 
-st.title("🛹 SkatePlace - Cloud Edition")
-st.markdown("Jetzt mit Supabase Power! 🚀 Alle Spots werden in Echtzeit in der Cloud gespeichert.")
+st.title("🛹 SkatePlace - Classic Edition")
+st.markdown("Zurück auf lokale JSON-Speicherung. Stabil und schnell. it Doppelklick Koordinaten auswählen.")
 
 # Sidebar für Karten-Einstellungen
 st.sidebar.header("🗺️ Karten-Einstellungen")
@@ -153,11 +122,11 @@ if output.get("last_clicked"):
                     "clip": spot_clip,
                     "crowd": spot_crowd,
                     "likes": 0,
-                    "photo_url": uploaded_file.name if uploaded_file else "Kein Foto"
+                    "photo": uploaded_file.name if uploaded_file else "Kein Foto"
                 }
-                save_data(new_spot)
-                st.session_state.spots = load_data() # Refresh data
-                st.success(f"Spot '{spot_name}' in der Cloud gespeichert!")
+                st.session_state.spots.append(new_spot)
+                save_data(st.session_state.spots)
+                st.success(f"Spot '{spot_name}' lokal gespeichert!")
                 st.rerun()
             else:
                 st.error("Bitte gib einen Namen ein!")
@@ -205,17 +174,17 @@ if st.session_state.spots:
             st.write(f"Koordinaten: `{spot['lat']:.5f}, {spot['lon']:.5f}`")
             
             likes = spot.get('likes', 0)
-            if st.button(f"❤️ {likes} Likes", key=f"like_{spot['id']}"):
-                update_likes(spot['id'], likes + 1)
-                st.session_state.spots = load_data()
+            if st.button(f"❤️ {likes} Likes", key=f"like_{i}"):
+                spot['likes'] = likes + 1
+                save_data(st.session_state.spots)
                 st.rerun()
             
-            if spot.get('photo_url') != "Kein Foto":
-                st.write(f"🖼️ Foto: {spot['photo_url']}")
+            if spot.get('photo') != "Kein Foto":
+                st.write(f"🖼️ Foto: {spot['photo']}")
             
-            if st.button(f"Spot löschen", key=f"del_{spot['id']}"):
-                delete_spot(spot['id'])
-                st.session_state.spots = load_data()
+            if st.button(f"Spot löschen", key=f"del_{i}"):
+                st.session_state.spots.pop(i)
+                save_data(st.session_state.spots)
                 st.rerun()
 else:
     st.info("Noch keine Spots markiert. Klicke auf die Karte, um zu starten!")
