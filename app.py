@@ -8,6 +8,69 @@ import math
 
 st.set_page_config(page_title="SkatePlace GIS", layout="wide")
 
+# --- CUSTOM CSS THEME (Urban Night Rider) ---
+st.markdown("""
+    <style>
+    /* Global Background & Text */
+    .stApp {
+        background-color: #000000;
+        color: #FFFFFF;
+    }
+    
+    /* Sidebar Styling */
+    [data-testid="stSidebar"] {
+        background-color: #0a0a0a !important;
+        border-right: 2px solid #00f2ff;
+    }
+    
+    /* Headers & Titles */
+    h1, h2, h3, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
+        color: #00f2ff !important;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    
+    /* Buttons Customization */
+    .stButton > button {
+        background-color: #00f2ff !important;
+        color: #000000 !important;
+        font-weight: bold !important;
+        border-radius: 5px !important;
+        border: none !important;
+        transition: all 0.3s ease !important;
+    }
+    .stButton > button:hover {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        transform: scale(1.05);
+    }
+    
+    /* Input Fields */
+    .stTextInput > div > div > input, .stNumberInput > div > div > input, .stSelectbox > div > div > input {
+        background-color: #1a1a1a !important;
+        color: #00f2ff !important;
+        border: 1px solid #333 !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Spot Cards Styling */
+    div[data-testid="stVerticalBlock"] > div:has(div.stMarkdown h3) {
+        background-color: #111 !important;
+        padding: 15px !important;
+        border-radius: 15px !important;
+        border: 1px solid #222 !important;
+        box-shadow: 0px 4px 15px rgba(0, 242, 255, 0.1) !important;
+    }
+    
+    /* Labels & Small Text */
+    label, .stMarkdown p {
+        color: #ccc !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+
 # --- DATENBANK-LOGIK (Local JSON File) ---
 DB_FILE = "spots_db.json"
 
