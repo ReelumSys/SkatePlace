@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd /mnt/c/Users/DreadLappy/source/repos/SkatePlace || exit
+
 echo "🚀 Starting Auto-Push to GitHub..."
 
 git add .
