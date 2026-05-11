@@ -3,3 +3,4 @@ streamlit-folium
 geopandas
 matplotlib
 streamlit
+supabase==2.15.3
