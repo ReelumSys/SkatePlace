@@ -8,20 +8,13 @@ import math
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
-# --- SUPABASE CONFIG (Direct Read for stability) ---
-def get_env_var(var_name):
-    try:
-        env_path = os.path.join(os.path.dirname(__file__), ".env")
-        with open(env_path, "r") as f:
-            for line in f:
-                if line.startswith(var_name + "="):
-                    return line.split("=")[1].strip().strip('"').strip("'")
-    except Exception as e:
-        st.error(f"Fehler beim Lesen der .env Datei: {e}")
-    return None
+# Lade Umgebungsvariablen aus .env
+env_path = os.path.join(os.path.dirname(__file__), ".env")
+load_dotenv(dotenv_path=env_path)
 
-SUPABASE_URL = get_env_var("SUPABASE_URL")
-SUPABASE_KEY = get_env_var("SUPABASE_KEY")
+# --- SUPABASE CONFIG ---
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 # Initialisiere Supabase Client
 @st.cache_resource
