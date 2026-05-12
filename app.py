@@ -115,9 +115,25 @@ center_lat = st.sidebar.number_input("Zentrum Breitengrad", value=52.369)
 center_lon = st.sidebar.number_input("Zentrum Längengrad", value=9.931)
 zoom = st.sidebar.slider("Zoom", min_value=1, max_value=20, value=12)
 
-st.sidebar.markdown("---")
+st.sidebar.markdown("---\n")
 st.sidebar.subheader("🔍 Suche & Filter")
 search_query = st.sidebar.text_input("Spots suchen...", placeholder="Name oder Tag (z.B. gap)...").lower()
+
+# --- Neue Interaktive Filter ---
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Spot Filter**")
+
+# Typ Filter (Multi-select)
+all_types = ["Ledge", "Rail", "Bowl", "Manual Pad", "Stairs", "Wallride", "Andere"]
+selected_types = st.sidebar.multiselect("Spot Typ", options=all_types, default=all_types)
+
+# Schwierigkeit Filter (Multi-select)
+all_diffs = ["Easy", "Medium", "Hard", "Pro"]
+selected_diffs = st.sidebar.multiselect("Schwierigkeit", options=all_diffs, default=all_diffs)
+
+# Bodenbelag Filter (Multi-select)
+all_surfaces = ["Beton", "Marmor", "Asphalt", "Holz", "Fliesen", "Andere"]
+selected_surfaces = st.sidebar.multiselect("Bodenbelag", options=all_surfaces, default=all_surfaces)
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("🔥 Layer & Sichtbarkeit")
@@ -134,14 +150,23 @@ max_dist = st.sidebar.slider("Radius (km)", 1, 50, 10)
 st.sidebar.markdown("---")
 st.sidebar.subheader("🎯 Neuer Spot")
 
-# Filter Spots based on search query
+# Filter Spots based on search query and new filters
 filtered_spots = st.session_state.spots
+
 if search_query:
     filtered_spots = [
-        spot for spot in st.session_state.spots 
+        spot for spot in filtered_spots 
         if search_query in spot.get('name', '').lower() or 
-           any(search_query in tag.lower() for tag in spot.get('tags', []))
+          any(search_query in tag.lower() for tag in spot.get('tags', []))
     ]
+
+# Apply Type, Diff, and Surface filters
+filtered_spots = [
+    spot for spot in filtered_spots 
+    if spot.get('type') in selected_types and 
+       spot.get('diff') in selected_diffs and 
+       spot.get('surface') in selected_surfaces
+]
 
 # Karte erstellen
 def create_map(lat, lon, zoom_level, spots, show_heatmap, show_markers):
