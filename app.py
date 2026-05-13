@@ -154,10 +154,15 @@ st.sidebar.subheader("🎯 Neuer Spot")
 filtered_spots = st.session_state.spots
 
 if search_query:
+    # ADVANCED SEARCH: Split query into keywords and check if all keywords are present in name or tags
+    keywords = search_query.split()
     filtered_spots = [
         spot for spot in filtered_spots 
-        if search_query in spot.get('name', '').lower() or 
-          any(search_query in tag.lower() for tag in spot.get('tags', []))
+        if all(
+            kw in spot.get('name', '').lower() or 
+            any(kw in tag.lower() for tag in spot.get('tags', []))
+            for kw in keywords
+        )
     ]
 
 # Apply Type, Diff, and Surface filters
