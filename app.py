@@ -301,41 +301,63 @@ if st.session_state.spots:
     if not filtered_spots:
         st.warning("Keine Spots gefunden, die auf deine Suche passen!")
     else:
-        cols = st.columns(3)
-        for i, spot in enumerate(filtered_spots):
-            with cols[i % 3]:
-                # Wir brauchen den originalen Index für das Löschen/Liken
-                original_index = st.session_state.spots.index(spot)
-                st.markdown(f"---")
-                st.subheader(f"🛹 {spot.get('name', 'Unbenannt')}")
-                st.write(f"**Typ:** {spot.get('type', 'Unbekannt')} | **Diff:** {spot.get('diff', 'Medium')}")
-                st.write(f"**Boden:** {spot.get('surface', 'Unbekannt')} | **Status:** {spot.get('status', 'Skatebar')}")
-                st.write(f"**Crowd:** {spot.get('crowd', 'Unbekannt')}")
+        # Use a detailed selector to pick a spot for full view
+        spot_to_view = st.selectbox(
+            "🔍 Wähle einen Spot für die Detail-Ansicht:", 
+            options=filtered_spots, 
+            format_func=lambda x: x.get('name', 'Unbenannt')
+        )
+        
+        if spot_to_view:
+            st.markdown("---")
+            # --- EXTENDED DETAIL VIEW ---
+            col_img, col_info = st.columns([1, 1])
+            
+            with col_img:
+                if spot_to_view.get('photo') != "Kein Foto":
+                    img_path = os.path.join("uploads", spot_to_view.get('photo'))
+                    if os.path.exists(img_path):
+                        st.image(img_path, caption=f"Spot: {spot_to_view.get('name')}", use_column_width=True)
+                    else:
+                        st.write("🖼️ Bild nicht gefunden")
+                else:
+                    st.write("❌ Kein Foto available")
                 
-                tags = spot.get('tags', [])
+                if spot_to_view.get('clip'):
+                    st.markdown("### 🎬 Action Clip")
+                    st.markdown(f"[Watch on YouTube/Insta]({spot_to_view['clip']})")
+
+            with col_info:
+                st.subheader(f"🛹 {spot_to_view.get('name', 'Unbenannt')}")
+                st.write(f"**Typ:** {spot_to_view.get('type', 'Unbekannt')} | **Schwierigkeit:** {spot_to_view.get('diff', 'Medium')}")
+                st.write(f"**Boden:** {spot_to_view.get('surface', 'Unbekannt')} | **Status:** {spot_to_view.get('status', 'Skatebar')}")
+                st.write(f"**Crowd-Level:** {spot_to_view.get('crowd', 'Unbekannt')}")
+                
+                tags = spot_to_view.get('tags', [])
                 if tags:
                     st.write(f"**Tags:** {' '.join([f'`{t}`' for t in tags])}")
                 
-                if spot.get('clip'):
-                    st.markdown(f"🎬 [Check Clip]({spot['clip']})")
-                
-                google_maps_url = f"https://www.google.com/maps/search/?api=1&query={spot['lat']},{spot['lon']}"
+                google_maps_url = f"https://www.google.com/maps/search/?api=1&query={spot_to_view['lat']},{spot_to_view['lon']}"
                 st.markdown(f"[📍 Open in Google Maps]({google_maps_url})")
+                st.write(f"Koordinaten: `{spot_to_view['lat']:.5f}, {spot_to_view['lon']:.5f}`")
                 
-                st.write(f"Koordinaten: `{spot['lat']:.5f}, {spot['lon']:.5f}`")
-                
-                likes = spot.get('likes', 0)
-                if st.button(f"❤️ {likes} Likes", key=f"like_{original_index}"):
-                    spot['likes'] = likes + 1
+                likes = spot_to_view.get('likes', 0)
+                if st.button(f"❤️ {likes} Likes", key=f"detail_like_{spot_to_view['name']}"):
+                    spot_to_view['likes'] = likes + 1
                     save_data(st.session_state.spots)
                     st.rerun()
-                
-                if spot.get('photo') != "Kein Foto":
-                    img_path = os.path.join("uploads", spot.get('photo'))
-                    if os.path.exists(img_path):
-                        st.image(img_path, caption=f"Spot-Foto", use_column_width=True)
-                    else:
-                        st.write(f"🖼️ Bild nicht gefunden: {spot.get('photo')}")
+
+            st.markdown("---")
+
+        # Keep the grid below for quick overview
+        st.write("### 📍 All Spots Overview")
+        cols = st.columns(3)
+        for i, spot in enumerate(filtered_spots):
+            with cols[i % 3]:
+                original_index = st.session_state.spots.index(spot)
+                st.markdown("---")
+                st.subheader(f"🛹 {spot.get('name', 'Unbenannt')}")
+                st.write(f"**Typ:** {spot.get('type', 'Unbekannt')} | **Diff:** {spot.get('diff', 'Medium')}")
                 
                 if st.button(f"Spot löschen", key=f"del_{original_index}"):
                     st.session_state.spots.pop(original_index)
