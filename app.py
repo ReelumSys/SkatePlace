@@ -1,7 +1,7 @@
 import streamlit as st
 import folium
 from streamlit_folium import st_folium
-from folium.plugins import HeatMap
+from folium.plugins import HeatMap, MarkerCluster
 import json
 import os
 import math
@@ -177,16 +177,35 @@ def create_map(lat, lon, zoom_level, spots, show_heatmap, show_markers):
         HeatMap(heat_data).add_to(m)
     
     if show_markers:
+        # Use MarkerCluster to avoid overlapping markers
+        marker_cluster = MarkerCluster().add_to(m)
+        
+        # Map spot types to specific icons (FontAwesome/Glyphicons)
+        type_icons = {
+            "Ledge": "building",
+            "Rail": "road",
+            "Bowl": "water",
+            "Manual Pad": "home",
+            "Stairs": "stairs",
+            "Wallride": "mountain",
+            "Andere": "info-sign"
+        }
+
         for spot in spots:
             diff = spot.get('diff', 'Medium')
             color = "green" if diff == "Easy" else "orange" if diff == "Medium" else "red"
-            popup_text = f"<b>{spot.get('name', 'Unbenannt')}</b><br>Typ: {spot.get('type', 'Unbekannt')}<br>Diff: {diff}"
+            
+            # Get icon based on type, fallback to info-sign
+            spot_type = spot.get('type', 'Andere')
+            icon_name = type_icons.get(spot_type, 'info-sign')
+            
+            popup_text = f"<b>{spot.get('name', 'Unbenannt')}</b><br>Typ: {spot_type}<br>Diff: {diff}"
             folium.Marker(
                 location=[spot['lat'], spot['lon']],
                 popup=popup_text,
                 tooltip=spot.get('name', 'Spot'),
-                icon=folium.Icon(color=color, icon='info-sign')
-            ).add_to(m)
+                icon=folium.Icon(color=color, icon=icon_name)
+            ).add_to(marker_cluster)
     return m
 
 map_obj = create_map(center_lat, center_lon, zoom, filtered_spots, show_heatmap, show_markers)
