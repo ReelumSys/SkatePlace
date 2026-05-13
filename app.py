@@ -170,7 +170,14 @@ filtered_spots = [
 
 # Karte erstellen
 def create_map(lat, lon, zoom_level, spots, show_heatmap, show_markers):
-    m = folium.Map(location=[lat, lon], zoom_start=zoom_level)
+    # Urban Night Mode tile layer
+    # Using CartoDB Dark Matter for that street/urban night look
+    m = folium.Map(
+        location=[lat, lon], 
+        zoom_start=zoom_level, 
+        tiles='CartoDB dark_matter', 
+        attr='&copy; OpenStreetMap contributors &copy; CARTO'
+    )
     
     if show_heatmap and spots:
         heat_data = [[spot['lat'], spot['lon']] for spot in spots]
