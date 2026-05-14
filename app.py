@@ -5,6 +5,11 @@ from folium.plugins import HeatMap, MarkerCluster
 import json
 import os
 import math
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 
 st.set_page_config(page_title="SkatePlace GIS", layout="wide")
 
@@ -101,6 +106,25 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     dlambda = math.radians(lon2 - lon1)
     a = math.sin(dphi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2)**2
     return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+def get_weather(lat, lon):
+    """Fetches current weather for a given location using OpenWeatherMap API."""
+    if not WEATHER_API_KEY:
+        return None
+    try:
+        url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={WEATHER_API_KEY}&units=metric&lang=de"
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                "temp": data["main"]["temp"],
+                "desc": data["weather"][0]["description"],
+                "icon": data["weather"][0]["icon"],
+                "humidity": data["main"]["humidity"]
+            }
+    except Exception as e:
+        print(f"Weather Error: {e}")
+    return None
 
 # Initialisiere Session State mit Daten aus der Datei
 if 'spots' not in st.session_state:
@@ -334,6 +358,22 @@ if st.session_state.spots:
 
             with col_info:
                 st.subheader(f"🛹 {spot_to_view.get('name', 'Unbenannt')}")
+                
+                # --- WEATHER WIDGET ---
+                weather = get_weather(spot_to_view['lat'], spot_to_view['lon'])
+                if weather:
+                    st.markdown(
+                        f"""
+                        <div style='background-color: #1a1a1a; padding: 10px; border-radius: 10px; border-left: 5px solid #00f2ff; margin-bottom: 15px;'>
+                            <span style='font-size: 1.2rem;'>☁️ <b>{weather['temp']}°C</b> | {weather['desc'].capitalize()}</span><br>
+                            <small style='color: #888;'>Feuchtigkeit: {weather['humidity']}%</small>
+                        </div>
+                        """, 
+                        unsafe_allow_html=True
+                    )
+                else:
+                    st.info("Wetterdaten konnten nicht geladen werden.")
+
                 st.write(f"**Typ:** {spot_to_view.get('type', 'Unbekannt')} | **Schwierigkeit:** {spot_to_view.get('diff', 'Medium')}")
                 st.write(f"**Boden:** {spot_to_view.get('surface', 'Unbekannt')} | **Status:** {spot_to_view.get('status', 'Skatebar')}")
                 st.write(f"**Crowd-Level:** {spot_to_view.get('crowd', 'Unbekannt')}")
