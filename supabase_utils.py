@@ -13,6 +13,7 @@ except Exception:
     URL = os.getenv("SUPABASE_URL")
     KEY = os.getenv("SUPABASE_KEY")
 
+
 if not URL or not KEY:
     st.error("Supabase URL oder Key fehlt in der .env Datei!")
 
