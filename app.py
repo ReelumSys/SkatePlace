@@ -7,7 +7,7 @@ import os
 import math
 import requests
 from dotenv import load_dotenv
-from supabase_utils import supabase, sign_in, sign_up, update_my_location, get_all_live_locations
+from supabase_utils import sign_in, sign_up, update_my_location, get_all_live_locations
 
 load_dotenv()
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
@@ -136,13 +136,12 @@ with st.sidebar:
             user, err = sign_in(email, password)
             if err: st.error(err)
             else: 
-                st.session_state.user = user.user
+                st.session_state.user = user.json()["user"]
                 st.rerun()
     else:
         st.subheader(f"Hi, {st.session_state.user.email}!")
         st.session_state.live_mode = st.toggle("Sichtbar für die Crew 📡", value=st.session_state.live_mode)
         if st.button("Logout"):
-            supabase.auth.sign_out()
             st.session_state.user = None
             st.session_state.live_mode = False
             st.rerun()

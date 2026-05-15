@@ -1,76 +1,115 @@
 import os
-from supabase import create_client, Client
+import requests
 import streamlit as st
 
 try:
-    URL = st.secrets["SUPABASE_URL"]
-    KEY = st.secrets["SUPABASE_KEY"]
+    SUPABASE_URL = st.secrets["SUPABASE_URL"]
+    SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 except KeyError:
     from dotenv import load_dotenv
     load_dotenv()
-    URL = os.getenv("SUPABASE_URL")
-    KEY = os.getenv("SUPABASE_KEY")
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-if not URL or not KEY:
+if not SUPABASE_URL or not SUPABASE_KEY:
     st.error("Fehler: SUPABASE_URL oder SUPABASE_KEY sind leer!")
-else:
-    # Debug: Zeige nur Länge und letzte 4 Zeichen des Keys (sicherheitshalber)
-    key_length = len(KEY)
-    key_end = KEY[-4:] if len(KEY) > 4 else KEY
-    st.info(f"Debug: URL={URL[:10]}..., KEY Länge={key_length}, KEY endet auf ...{key_end}")
 
-try:
-    supabase: Client = create_client(URL, KEY)
-except Exception as e:
-    st.error(f"Supabase Client Init Fehler: {e}")
+HEADERS = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "Content-Type": "application/json"
+}
+
+AUTH_URL = f"{SUPABASE_URL}/auth/v1"
+REST_URL = f"{SUPABASE_URL}/rest/v1"
 
 def sign_up(email, password, username):
+    """Erstellt einen neuen Account via direkter HTTP-API."""
     try:
-        res = supabase.auth.sign_up({"email": email, "password": password})
-        if res.user:
-            user_id = res.user.id
-            supabase.table("user_locations").insert({
-                "user_id": user_id,
-                "username": username,
-                "latitude": 0.0,
-                "longitude": 0.0,
-                "status": "offline"
-            }).execute()
-            return res, None
-        return None, "Fehler beim Erstellen des Users"
+        # 1. User in Supabase Auth erstellen
+        res = requests.post(
+            f"{AUTH_URL}/signup",
+            headers=HEADERS,
+            json={"email": email, "password": password}
+        )
+        
+        if res.status_code == 200:
+            data = res.json()
+            user_id = data["user"]["id"]
+            
+            # 2. Standort-Eintrag in user_locations erstellen
+            insert_headers = HEADERS.copy()
+            insert_headers["Authorization"] = f"Bearer {data['access_token']}"
+            
+            insert_res = requests.post(
+                f"{REST_URL}/user_locations",
+                headers=insert_headers,
+                json={
+                    "user_id": user_id,
+                    "username": username,
+                    "latitude": 0.0,
+                    "longitude": 0.0,
+                    "status": "offline"
+                }
+            )
+            
+            if insert_res.status_code not in (200, 201):
+                print(f"Insert warning: {insert_res.status_code} {insert_res.text}")
+            
+            return data, None
+        else:
+            return None, f"API Fehler ({res.status_code}): {res.json().get('message', res.text)}"
+            
     except Exception as e:
         return None, f"Auth-Fehler: {str(e)}"
 
 def sign_in(email, password):
+    """Loggt den User ein via direkter HTTP-API."""
     try:
-        res = supabase.auth.sign_in_with_password({"email": email, "password": password})
-        return res, None
+        res = requests.post(
+            f"{AUTH_URL}/token?grant_type=password",
+            headers=HEADERS,
+            json={"email": email, "password": password}
+        )
+        
+        if res.status_code == 200:
+            return res, None
+        else:
+            err_msg = res.json().get('message', res.text) if res.text else "Unbekannter Fehler"
+            return None, f"Login Fehler ({res.status_code}): {err_msg}"
+            
     except Exception as e:
-        # Gibt den kompletten Error-Text aus, damit wir wissen, was Supabase antwortet
-        full_error = str(e)
-        # Versuche Status-Code zu extrahieren, falls vorhanden
-        status_info = ""
-        if hasattr(e, 'status_code'):
-            status_info = f" (HTTP Status: {e.status_code})"
-        elif hasattr(e, 'response') and hasattr(e.response, 'status_code'):
-            status_info = f" (HTTP Status: {e.response.status_code})"
-        return None, f"Login-Fehler{status_info}: {full_error}"
+        return None, f"Login-Fehler: {str(e)}"
 
 def update_my_location(user_id, username, lat, lon, status="online"):
+    """Aktualisiert den eigenen Live-Standort in der DB."""
     try:
-        supabase.table("user_locations").update({
-            "latitude": lat,
-            "longitude": lon,
-            "status": status,
-            "updated_at": "now()"
-        }).eq("user_id", user_id).execute()
+        # Hol den aktuellen Token (einfach mit anon key upsert)
+        requests.patch(
+            f"{REST_URL}/user_locations",
+            params={"user_id": f"eq.{user_id}"},
+            headers=HEADERS,
+            json={
+                "latitude": lat,
+                "longitude": lon,
+                "status": status,
+                "updated_at": "now()"
+            }
+        )
     except Exception as e:
         print(f"Error updating location: {e}")
 
 def get_all_live_locations():
+    """Holt alle Nutzer, die gerade 'online' sind."""
     try:
-        res = supabase.table("user_locations").select("*").eq("status", "online").execute()
-        return res.data
+        res = requests.get(
+            f"{REST_URL}/user_locations",
+            headers=HEADERS,
+            params={"status": "eq.online", "select": "user_id,username,latitude,longitude"}
+        )
+        if res.status_code == 200:
+            return res.json()
+        return []
     except Exception as e:
         print(f"Error fetching locations: {e}")
         return []
