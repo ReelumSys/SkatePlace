@@ -4,10 +4,14 @@ from supabase import create_client, Client
 import streamlit as st
 
 # Lade Umgebungsvariablen aus .env
-load_dotenv()
-
-URL = os.getenv("SUPABASE_URL")
-KEY = os.getenv("SUPABASE_KEY")
+try:
+    URL = st.secrets["SUPABASE_URL"]
+    KEY = st.secrets["SUPABASE_KEY"]
+except Exception:
+    from dotenv import load_dotenv
+    load_dotenv()
+    URL = os.getenv("SUPABASE_URL")
+    KEY = os.getenv("SUPABASE_KEY")
 
 if not URL or not KEY:
     st.error("Supabase URL oder Key fehlt in der .env Datei!")
