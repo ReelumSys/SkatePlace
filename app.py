@@ -139,7 +139,7 @@ with st.sidebar:
                 st.session_state.user = user.json()["user"]
                 st.rerun()
     else:
-        st.subheader(f"Hi, {st.session_state.user.email}!")
+        st.subheader(f'Hi, {st.session_state.user["email"]}!')
         st.session_state.live_mode = st.toggle("Sichtbar für die Crew 📡", value=st.session_state.live_mode)
         if st.button("Logout"):
             st.session_state.user = None
@@ -178,9 +178,9 @@ with st.sidebar:
 
 # Update Live Location
 if st.session_state.user and st.session_state.live_mode:
-    update_my_location(st.session_state.user.id, st.session_state.user.email, user_lat, user_lon)
+    update_my_location(st.session_state.user["id"], st.session_state.user["email"], user_lat, user_lon)
 elif st.session_state.user:
-    update_my_location(st.session_state.user.id, st.session_state.user.email, 0.0, 0.0, status="offline")
+    update_my_location(st.session_state.user["id"], st.session_state.user["email"], 0.0, 0.0, status="offline")
 
 st.title("🛹 SkatePlace - Live Edition")
 st.markdown("Live Tracking integriert. Melde dich ein, um deine Crew zu sehen!")
@@ -208,7 +208,7 @@ def create_map(lat, lon, zoom_level, spots, show_heatmap, show_markers):
     
     live_users = get_all_live_locations()
     for user in live_users:
-        if st.session_state.user and user['user_id'] == st.session_state.user.id:
+        if st.session_state.user and user['user_id'] == st.session_state.user["id"]:
             continue
         folium.Marker([user['latitude'], user['longitude']], popup=f"Crew: {user['username']}", tooltip=user['username'], icon=folium.Icon(color='blue', icon='bicycle', prefix='fa')).add_to(m)
         
